@@ -112,13 +112,13 @@ class Customer(Data):
     def __init__(self) -> None :
         # 設定中文字型
         # plt.rcParams['font.family'] = 'Microsoft YaHei'
-        plt.rcParams['font.family'] = 'Arial Unicode'
+        plt.rcParams['font.family'] = 'Arial Unicode MS'
         plt.rcParams['axes.unicode_minus'] = False
 
     def main(self):
         # 載入資料集
         df = super().read()
-
+ 
         # 繪製年齡分佈圖
         plt.figure(figsize=(10, 6))
         df['AGE_GROUP'].value_counts().sort_index().plot(kind='bar', color='skyblue')
