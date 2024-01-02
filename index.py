@@ -1,6 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from data import Data
 
 class Main(Data):
@@ -11,27 +10,10 @@ class Main(Data):
         self.data = super().read()
         self.data_s = super().read_standardize()
 
-    def test(self):
-        # 呼叫 -> 拿取資料進行處理
-        # self.age()
-        # self.turnover()
-        # self.count()
-        self.money()
-
     def age(self):
         # 呼叫 -> 拿取資料進行處理
         df = self.data
         df["TRANSACTION_DT"] = pd.to_datetime(df["TRANSACTION_DT"])
-
-        # 圓餅圖
-        pie_data = df["AGE_GROUP"].value_counts()
-        plt.figure(figsize=(10, 8))
-        plt.pie(pie_data, labels=pie_data.index, autopct="%1.1f%%", startangle=90)
-        plt.title("年齡組分佈")
-        plt.show()
-        plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
-        plt.rcParams['axes.unicode_minus'] = False
-
         # 長條圖
         bar_data = df["AGE_GROUP"].value_counts().sort_index()
         plt.figure(figsize=(10, 6))
@@ -50,23 +32,35 @@ class Main(Data):
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['axes.unicode_minus'] = False
 
+        # 折線圖
+        line_data = df.groupby("TRANSACTION_DT")["AGE_GROUP"].value_counts().unstack().fillna(0)
+        line_data.plot(kind='line', marker='', figsize=(10, 6))  # 將 marker 設置為空字符串
+        plt.title("年齡組變化折線圖")
+        plt.xlabel("日期")
+        plt.ylabel("人數")
+        plt.legend(title="年齡組")
+        plt.show()
+
+        plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
+        plt.rcParams['axes.unicode_minus'] = False
+
     def turnover(self):
         df = self.data_s
-       # 將日期轉換為日期類型
+        # 將日期轉換為日期類型
         df["TRANSACTION_DT"] = pd.to_datetime(df["TRANSACTION_DT"])
 
-        # 按月份加總營業額
-        monthly_sales = df.groupby(df["TRANSACTION_DT"].dt.to_period("M"))["AMOUNT"].sum()
+        # 按周加總營業額
+        weekly_sales = df.groupby(df["TRANSACTION_DT"].dt.to_period("W-Mon"))["AMOUNT"].sum()
 
-        # 折線圖
+        # 折線圖（每周）
         plt.figure(figsize=(15, 8))
-        line = plt.plot(monthly_sales.index.astype(str), monthly_sales, marker="o", color="green")[0]
-        plt.title("每月營業額變化")
+        line_weekly = plt.plot(weekly_sales.index.astype(str), weekly_sales, marker="o", color="blue")[0]
+        plt.title("每周營業額變化")
         plt.xlabel("日期")
         plt.ylabel("營業額")
-
+        plt.xticks(rotation='vertical')
         # 在每個點上標示數字
-        for x, y in zip(line.get_xdata(), line.get_ydata()):
+        for x, y in zip(line_weekly.get_xdata(), line_weekly.get_ydata()):
             plt.text(x, y, f'{y:.0f}', ha='right', va='bottom')
         plt.show()
 
@@ -76,49 +70,47 @@ class Main(Data):
         product_counts = df["PRODUCT_ID"].value_counts()
 
         # 取前10個最受歡迎的產品
-        top_products = product_counts.head(10)
+        top_products = product_counts.head(15)
 
-        # 條形圖
+
+        # 橫長條圖
         plt.figure(figsize=(15, 10))
-        bars = plt.bar(top_products.index.astype(str), top_products, color="skyblue")
+        bars_horizontal = plt.barh(top_products.index.astype(str), top_products, color="skyblue")
 
         # 在每個條形上標示數字
-        for bar in bars:
-            yval = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2, yval, round(yval, 1), ha='center', va='bottom')
+        for bar in bars_horizontal:
+            xval = bar.get_width()
+            plt.text(xval, bar.get_y() + bar.get_height()/2, round(xval, 1), ha='left', va='center')
 
-        plt.title("前10個最受歡迎的產品")
-        plt.xlabel("產品ID")
-        plt.ylabel("購買次數")
+        plt.title("前15個最受歡迎的產品")
+        plt.xlabel("購買次數")
+        plt.ylabel("產品ID")
         plt.show()
+
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['axes.unicode_minus'] = False
+    def two(self):
+        df = self.data
+        df_1 = pd.read_excel('12345.xlsx')
+        # 在共同列上合併數據框（在這種情況下為“CUSTOMER_ID”）
+        merged_df = pd.merge(df, df_1, left_on="CUSTOMER_ID", right_on="Customer_ID")
 
-    def money(self):
-        data = self.data
-        data_Total = data[["CUSTOMER_ID","TOTAL"]].groupby("CUSTOMER_ID").sum()['TOTAL']
-        # print(data_Total)
-        plt.plot(data_Total)
-        plt.show()
-        data_Quality =data[["CUSTOMER_ID","AMOUNT"]].groupby("CUSTOMER_ID").sum()['AMOUNT']
-        # print(data_Quality)
-        plt.plot(data_Quality)
-        plt.show()
+        # 識別每個客戶群體的前三名產品
+        top_products_by_segment = merged_df.groupby(["Recency", "Frequency", "Monetary"]).apply(lambda x: x.nlargest(3, "SALES_PRICE"))
 
-# Main().test()
-    
+        # 顯示結果
+        print(top_products_by_segment)
+    def show(self):
+        self.age();self.turnover();self.count();self.two
+
 class Customer(Data):
-    """顧客分析"""
-    def __init__(self) -> None :
-        # 設定中文字型
-        # plt.rcParams['font.family'] = 'Microsoft YaHei'
-        plt.rcParams['font.family'] = 'Arial Unicode MS'
+    def __init__(self) -> None:
+        super().__init__()
+        plt.rcParams['font.family'] = 'Microsoft YaHei'
         plt.rcParams['axes.unicode_minus'] = False
-
-    def main(self):
+    def Anaylize(self):
         # 載入資料集
         df = super().read()
- 
         # 繪製年齡分佈圖
         plt.figure(figsize=(10, 6))
         df['AGE_GROUP'].value_counts().sort_index().plot(kind='bar', color='skyblue')
@@ -142,7 +134,10 @@ class Customer(Data):
         plt.xlabel('郵遞區號')
         plt.ylabel('顧客數量')
         plt.show()
-        
+    def New_back(self):
+        import seaborn as sns
+        df = super().read()
+
         # 將 TRANSACTION_DT 轉換為日期類型
         df['TRANSACTION_DT'] = pd.to_datetime(df['TRANSACTION_DT'])
         # 計算每位顧客的購買次數
@@ -185,6 +180,8 @@ class Customer(Data):
         plt.xlabel('顧客類別')
         plt.ylabel('平均交易金額 (元)')
         plt.show()
+    def show(self):
+        self.Anaylize();self.New_back()
 
-
-Customer().main()
+Main().show()
+Customer().show()

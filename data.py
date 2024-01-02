@@ -48,8 +48,26 @@ class Data():
         return data
     #文獻：https://medium.com/ai%E5%8F%8D%E6%96%97%E5%9F%8E/preprocessing-data-%E6%95%B8%E6%93%9A%E7%89%B9%E5%BE%B5%E6%A8%99%E6%BA%96%E5%8C%96%E5%92%8C%E6%AD%B8%E4%B8%80%E5%8C%96-9bd3e5a8f2fc
 
+    def read_s_l(self):
+        """
+        資料預處理後將資料進行標準化
 
-
+        output:
+        DataFrame
+        """
+        from sklearn.preprocessing import LabelEncoder,StandardScaler
+        data = self.read()
+        data = data[data["TOTAL"]< 2000000]
+        # 文字
+        LE = LabelEncoder() ;
+        data["AGE_GROUP"] = LE.fit_transform(data['AGE_GROUP'])
+        data['PIN_CODE'] = LE.fit_transform(data['PIN_CODE'])
+        data["PRODUCT_SUBCLASS"] = LE.fit_transform(data["PRODUCT_SUBCLASS"])
+        # 數值特徵的標準化
+        numerical_features = ['AMOUNT', 'ASSET', 'SALES_PRICE', 'TOTAL']
+        scaler = StandardScaler()
+        data[numerical_features] = scaler.fit_transform(data[numerical_features])
+        return data
 
     def __check_null(self,df:pd.DataFrame) -> pd.DataFrame :
         """
@@ -117,7 +135,7 @@ class Data():
         else:
             raise KeyError("你輸入錯參數，產生資料失敗！")
         # print(data[['TRANSACTION_DT']].values)
-        print(data)
+        # print(data)
         return(data)
 
 
