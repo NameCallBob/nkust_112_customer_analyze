@@ -183,5 +183,5 @@ class Customer(Data):
     def show(self):
         self.Anaylize();self.New_back()
 
-Main().show()
-Customer().show()
+# Main().show()
+# Customer().show()

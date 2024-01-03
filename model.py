@@ -542,6 +542,6 @@ class Model(Data):
             plt.show()
             print("模型係數（斜率）:", model.coef_)
             print("模型截距:", model.intercept_)
-
-
-Model().show()
+    def RFM_data(self):
+        return self.__RFM_data()
+# Model().show() 
